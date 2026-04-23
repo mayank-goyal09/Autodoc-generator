@@ -1,0 +1,43 @@
+name: AutoDoc Generator CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Explicitly installing sentencepiece just in case, though it should be in requirements
+        pip install sentencepiece 
+
+    - name: Run AutoDoc Generator
+      run: |
+        # Run the tool against the sample code
+        python main.py --file sample_code.py
+        
+    - name: Verify Output
+      run: |
+        # Check if the documented file was created
+        if [ -f sample_code_documented.py ]; then
+          echo "✅ Documentation successfully generated!"
+          cat sample_code_documented.py
+        else
+          echo "❌ Failed to generate documentation."
+          exit 1
+        fi
