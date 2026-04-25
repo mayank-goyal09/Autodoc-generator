@@ -4,43 +4,41 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 class DocstringGenerator:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"⚙️ Loading AI Model on {self.device.upper()}...")
+        print(f"[SETUP] Loading AI Model on {self.device.upper()}...")
         
-        # Switching to a more standard GPT-based model to avoid T5/SentencePiece issues
-        self.model_name = "microsoft/CodeGPT-small-py"
+        # Phi-1.5 is extremely good at Python logic and very stable
+        self.model_name = "microsoft/phi-1_5"
         
-        print(f"📥 Loading Tokenizer for {self.model_name}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        print(f"[FETCH] Loading Tokenizer for {self.model_name}...")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
         
-        print("📥 Loading Model Weights...")
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name).to(self.device)
-        print("✅ Model loaded successfully!")
+        print("[FETCH] Loading Model Weights...")
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, trust_remote_code=True).to(self.device)
+        print("[READY] Phi-1.5 model loaded successfully!")
 
     def predict(self, code_snippet):
         if not code_snippet or not isinstance(code_snippet, str):
             return "No description available."
 
-        # For GPT models, we execute the code followed by a docstring start token
-        input_text = code_snippet + '\n\n    """'
+        # We use a structured prompt to tell the model exactly what we want
+        prompt = f"Code:\n{code_snippet}\n\nSummary of the function in one sentence:"
         
-        input_ids = self.tokenizer.encode(input_text, return_tensors="pt", truncation=True, max_length=512).to(self.device)
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         
         with torch.no_grad():
-            # Generate until we hit a closing quote or newline
             outputs = self.model.generate(
-                input_ids, 
+                **inputs, 
                 max_new_tokens=50,
                 pad_token_id=self.tokenizer.eos_token_id
             )
         
-        # Decode only the NEW tokens (the generated part)
-        generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        full_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Extract just the docstring part
-        if '"""' in generated_text:
-            # We want what comes AFTER the start of our input prompt
-            # But since GPT generates the WHOLE sequence, we just take the suffix
-            summary = generated_text[len(input_text):].split('"""')[0].strip()
-            return summary if summary else "Generated docstring."
+        # Extract the part after our prompt
+        if "Summary of the function in one sentence:" in full_text:
+            summary = full_text.split("Summary of the function in one sentence:")[1].strip()
+            # Clean up and take only the first sentence/line
+            summary = summary.split("\n")[0].split(". ")[0].strip()
+            return summary if summary else "Automated code documentation."
         
         return "Auto-generated documentation."
