@@ -22,33 +22,33 @@ def main():
     target_file = args.file
     
     if not os.path.exists(target_file):
-        print(f"❌ Error: File '{target_file}' not found.")
+        print(f"[ERROR] File '{target_file}' not found.")
         return
 
     try:
         generator = DocstringGenerator()
-        print(f"🔍 Analyzing {target_file}...")
+        print(f"[INFO] Analyzing {target_file}...")
         functions = extract_functions(target_file)
         
         if not functions:
-            print("ℹ️ No new functions need documenting!")
+            print("[INFO] No new functions need documenting!")
             return
 
         # Store documentation: {line_number: docstring_text}
         doc_map = {}
         
         for func in functions:
-            print(f"🧠 Processing: {func['name']}...")
+            print(f"[PROCESS] Processing: {func['name']}...")
             summary = generator.predict(func['content'])
             doc_map[func['line']] = summary
         
-        print("🖋️ Injecting docstrings into new file...")
+        print("[WRITE] Injecting docstrings into new file...")
         final_file = inject_docstrings(target_file, doc_map)
         
-        print(f"✅ Success! Your documented code is at: {final_file}")
+        print(f"[SUCCESS] Your documented code is at: {final_file}")
 
     except Exception as e:
-        print("💥 An unexpected error occurred:")
+        print("[CRASH] An unexpected error occurred:")
         traceback.print_exc()
 
 
