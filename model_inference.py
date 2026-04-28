@@ -52,6 +52,7 @@ Code:
                     return summary
         except Exception as e:
             print(f"[CRASH] Hugging Face Inference failed: {e}")
-            return "Auto-generated documentation."
+            return f"Error generating documentation: {str(e)}"
+
 
         return "Auto-generated documentation."
