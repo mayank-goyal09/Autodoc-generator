@@ -27,9 +27,12 @@ jobs:
         pip install sentencepiece 
 
     - name: Run AutoDoc Generator
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         # Run the tool against the sample code
         python main.py --file sample_code.py
+
         
     - name: Verify Output
       run: |
