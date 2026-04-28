@@ -27,14 +27,19 @@ class DocstringGenerator:
         if not code_snippet or not isinstance(code_snippet, str):
             return "No description available."
         
-        prompt = f"""You are a senior technical writer.
-Summarize the following Python function in one short, crisp, professional sentence.
-The sentence MUST start with a capitalized present-tense verb (e.g. "Calculates", "Returns", "Validates", "Checks").
-Do NOT wrap the output in quotes. Only return the summary sentence.
+        prompt = f"""You are a senior technical writer enforcing strict clean-code guidelines.
+Summarize the following Python function in one sentence according to these constraints:
+- No unnecessary implementation details.
+- State explicit constraints where relevant.
+- Use lean phrasing (absolutely no filler words).
+- Answer: what does this guarantee? (e.g. "Ensures X occurs", "Guarantees Y returns").
+- Start with a capitalized present-tense verb.
+- Do NOT wrap the output in quotes or markdown.
 
 Code:
 {code_snippet.strip()}
 """
+
         
         try:
             response = self.client.chat_completion(
