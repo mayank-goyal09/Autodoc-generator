@@ -20,25 +20,37 @@ class DocstringGenerator:
         if not code_snippet or not isinstance(code_snippet, str):
             return "No description available."
 
-        # We use a structured prompt to tell the model exactly what we want
-        prompt = f"Code:\n{code_snippet}\n\nSummary of the function in one sentence:"
+        prompt = f"""Provide a concise, one-sentence description for the Python function.
+
+Code:
+def add(a, b):
+    return a + b
+Summary: Returns the sum of two numbers.
+
+Code:
+{code_snippet}
+Summary:"""
         
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs, 
-                max_new_tokens=50,
-                pad_token_id=self.tokenizer.eos_token_id
+                max_new_tokens=40,
+                pad_token_id=self.tokenizer.eos_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
             )
         
         full_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Extract the part after our prompt
-        if "Summary of the function in one sentence:" in full_text:
-            summary = full_text.split("Summary of the function in one sentence:")[1].strip()
-            # Clean up and take only the first sentence/line
-            summary = summary.split("\n")[0].split(". ")[0].strip()
-            return summary if summary else "Automated code documentation."
+        # Extract the part after the final prompt's "Summary:"
+        if "Summary:" in full_text:
+            # Split by Summary: and take the last part
+            summary = full_text.split("Summary:")[-1].strip()
+            # Stop at the first newline or period
+            summary = summary.split("\n")[0].split(".")[0].strip()
+            # Remove any stray quotes
+            summary = summary.strip('\'" ')
+            return summary + "." if summary else "Automated code documentation."
         
         return "Auto-generated documentation."

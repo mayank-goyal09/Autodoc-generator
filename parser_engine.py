@@ -29,5 +29,5 @@ def extract_functions(file_path):
         return functions
 
     except Exception as e:
-        print(f"❌ Error parsing file {file_path}: {e}")
+        print(f"[ERROR] Error parsing file {file_path}: {e}")
         return []
