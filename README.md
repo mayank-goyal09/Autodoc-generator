@@ -2,7 +2,8 @@
 
 # 📜 AutoDoc Generator — Python AST & LLM Documentation Pipeline
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Outfit&weight=700&size=32&duration=3500&pause=1000&color=4FACFE&center=true&vCenter=true&multiline=true&width=900&height=100&lines=Automated+Python+Docstrings+🚀;AST+Parsing+%7C+AI-Generated+Guarantees;Clean+Code+without+the+Manual+Work)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Outfit&weight=700&size=32&duration=3500&pause=1000&color=4FACFE&center=true&vCenter=true&width=900&height=70&lines=Automated+Python+Docstrings+🚀;AST+Parsing+%7C+AI-Generated+Guarantees;Clean+Code+without+the+Manual+Work)](https://git.io/typing-svg)
+
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Serverless-FFD21E?style=for-the-badge)
