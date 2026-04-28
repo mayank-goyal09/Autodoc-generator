@@ -3,3 +3,5 @@ torch
 tokenizers
 sentencepiece
 streamlit
+huggingface_hub
+python-dotenv

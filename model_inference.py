@@ -1,80 +1,57 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import os
+from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
+
+# Load environment variables from the .env file
+load_dotenv()
 
 class DocstringGenerator:
     def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"[SETUP] Loading AI Model on {self.device.upper()}...")
+        print("[SETUP] Connecting to Hugging Face Serverless Inference API...")
         
-        # Salesforce CodeGen 350M Mono - fine-tuned for Python code
-        self.model_name = "Salesforce/codegen-350M-mono"
+        # We use Llama-3.3-70B-Instruct which yields incredible performance on zero-shot code
+        self.model_name = "meta-llama/Llama-3.3-70B-Instruct"
         
-        print(f"[FETCH] Loading Tokenizer for {self.model_name}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.token = os.getenv("HF_TOKEN", None)
         
-        print("[FETCH] Loading Model Weights...")
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name, 
-            trust_remote_code=True
-        ).to(self.device)
-        print("[READY] CodeGen model loaded successfully!")
+        if not self.token or self.token == "YOUR_HUGGINGFACE_TOKEN_HERE":
+            print("[WARN] HF_TOKEN is missing or default in .env. Using anonymous mode (Strict rate limits).")
+            self.token = None
+            
+        self.client = InferenceClient(model=self.model_name, token=self.token)
+        print(f"[READY] Connected to Hugging Face Inference API using {self.model_name}!")
 
     def predict(self, code_snippet):
         if not code_snippet or not isinstance(code_snippet, str):
             return "No description available."
         
-        # Diverse few-shot prompt to prevent bad/arithmetic defaults
-        prompt = f"""Summarize the following Python function in one sentence.
+        prompt = f"""You are a senior technical writer.
+Summarize the following Python function in one short, crisp, professional sentence.
+The sentence MUST start with a capitalized present-tense verb (e.g. "Calculates", "Returns", "Validates", "Checks").
+Do NOT wrap the output in quotes. Only return the summary sentence.
 
 Code:
-def add(a, b):
-    return a + b
-Summary: Returns the sum of two numbers.
-
-Code:
-def is_even(n):
-    return n % 2 == 0
-Summary: Checks if a number is even.
-
-Code:
-def greet(name):
-    return f"Hello, {{name}}!"
-Summary: Returns a greeting string for the given name.
-
-Code:
-def withdraw(self, amount):
-    if amount > self.balance:
-        raise ValueError("Insufficient funds")
-    self.balance -= amount
-Summary: Withdraws the specified amount from the account balance.
-
-Code:
-{code_snippet}
-Summary:"""
+{code_snippet.strip()}
+"""
         
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs, 
-                max_new_tokens=50,
-                pad_token_id=self.tokenizer.eos_token_id,
-                eos_token_id=self.tokenizer.eos_token_id,
+        try:
+            response = self.client.chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=60,
+                temperature=0.1,
             )
-        
-        full_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Extract the part after the final prompt's "Summary:"
-        if "Summary:" in full_text:
-            summary = full_text.split("Summary:")[-1].strip()
-            summary = summary.split("\n")[0].strip()
+            
+            summary = response.choices[0].message.content.strip()
             
             if summary:
-                summary = summary.strip('"\' ')
-                summary = summary[0].upper() + summary[1:]
-                if not summary.endswith("."):
-                    summary += "."
-                return summary
-        
+                summary = summary.strip('"\'` #')
+                if summary:
+                    summary = summary[0].upper() + summary[1:]
+                    if not summary.endswith("."):
+                        summary += "."
+                    return summary
+        except Exception as e:
+            print(f"[CRASH] Hugging Face Inference failed: {e}")
+            return "Auto-generated documentation."
+
         return "Auto-generated documentation."
