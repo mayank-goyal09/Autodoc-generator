@@ -1,5 +1,5 @@
-transformers==4.46.0
+transformers
 torch
-tokenizers==0.20.3
+tokenizers
 sentencepiece
 streamlit
