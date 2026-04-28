@@ -9,8 +9,10 @@ class DocstringGenerator:
     def __init__(self):
         print("[SETUP] Connecting to Hugging Face Serverless Inference API...")
         
-        # We use Llama-3.3-70B-Instruct which yields incredible performance on zero-shot code
+        # Reverting to Llama-3.3 for premium docstring extraction once token permissions are granted
         self.model_name = "meta-llama/Llama-3.3-70B-Instruct"
+
+
         
         self.token = os.getenv("HF_TOKEN", None)
         
