@@ -27,18 +27,23 @@ class DocstringGenerator:
         if not code_snippet or not isinstance(code_snippet, str):
             return "No description available."
         
-        prompt = f"""You are a senior technical writer enforcing strict clean-code guidelines.
-Summarize the following Python function in one sentence according to these constraints:
-- No unnecessary implementation details.
-- State explicit constraints where relevant.
-- Use lean phrasing (absolutely no filler words).
-- Answer: what does this guarantee? (e.g. "Ensures X occurs", "Guarantees Y returns").
-- Start with a capitalized present-tense verb.
-- Do NOT wrap the output in quotes or markdown.
+        prompt = f"""You are an expert code documentation engine.
+Generate a strict, minimal one-line Python docstring for the provided function according to these rules:
+
+1. DOCUMENT WHAT, NOT HOW: Do NOT describe internal implementation details (e.g. cut "using recursion" or "loops through").
+2. DEFINE INPUT CONSTRAINTS: Explicitly state boundary requirements (e.g., "Requires non-negative integer", "Constraint: b != 0").
+3. NO FILLER WORDS: Cut phrases like "returns the result of", "given number", "specified amount". Keep it lean.
+4. WRITE FOR GUARANTEES: Describe what the function ultimately promises to accomplish.
+
+Good Examples:
+- `def factorial(n):` -> "Returns the factorial of n. Requires non-negative integer."
+- `def divide(a, b):` -> "Returns the quotient of a divided by b. Constraint: b != 0."
+- `def is_prime(n):` -> "Returns True if n is prime, False otherwise. Expects integer."
 
 Code:
 {code_snippet.strip()}
 """
+
 
         
         try:
